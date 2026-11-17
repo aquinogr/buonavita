@@ -157,7 +157,7 @@ body > div[id^="div"] { display: none !important; } /* painel de setas padrão d
   var q = new URLSearchParams(location.search);
   var file = q.get('modelo') === 'proposta' ? 'buonavita-proposta.sh3d' : 'buonavita-existente.sh3d';
   document.getElementById('dl').href = file;
-  var cams = ['Fachada', 'Sala de estar', 'Gourmet e cozinha', 'Piscina e deck', 'Suíte master', 'Circulação'];
+  var cams = ['Perspectiva da rua', 'Fachada', 'Sala de estar', 'Gourmet e cozinha', 'Piscina e deck', 'Suíte master', 'Circulação'];
   function toggle(id) {
     ['help', 'info'].forEach(function (p) {
       var el = document.getElementById(p);
