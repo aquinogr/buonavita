@@ -110,7 +110,8 @@ body.m-existente [data-modelo=existente], body.m-proposta [data-modelo=proposta]
   <p><b>Visita virtual</b>: você anda dentro da casa na altura dos olhos.</p>
   <ul>
     <li><kbd>↑</kbd> <kbd>↓</kbd> ou <kbd>W</kbd> <kbd>S</kbd>: andar para frente e para trás</li>
-    <li><kbd>←</kbd> <kbd>→</kbd> ou arrastar: virar</li>
+    <li><kbd>←</kbd> <kbd>→</kbd> ou arrastar com o botão esquerdo: virar</li>
+    <li><b>Botão direito</b> arrastando: andar — para cima vai para a frente, para baixo volta, para os lados anda de lado (com <kbd>Shift</kbd>, mais rápido). Na vista aérea, aproxima e gira.</li>
     <li><kbd>Shift</kbd>: andar mais rápido</li>
     <li><kbd>Page Up</kbd> / <kbd>Page Down</kbd>: olhar para cima e para baixo</li>
     <li><kbd>Espaço</kbd>: alterna entre vista aérea e visita</li>
@@ -125,10 +126,10 @@ body.m-existente [data-modelo=existente], body.m-proposta [data-modelo=proposta]
   <p class="note">Primeiro estudo arquitetônico, para discutir. O projeto estrutural de reforço vem depois que esta planta for aprovada.</p>
   <h3>Térreo</h3>
   <ul>
-    <li>Sai o Quarto (9,66 m²). No lugar entram a escada em U (20 degraus de 17,5 cm, pisos de 28 cm) e um estar integrado à gourmet e à sala.</li>
+    <li>Sai o Quarto (9,66 m²). No lugar entram a escada metálica em U (22 degraus de 17,7 cm, pisos de 26 cm) e um estar integrado à gourmet e à sala.</li>
     <li>A sala perde o pé-direito duplo: o 1º andar passa por cima dela.</li>
   </ul>
-  <h3>1º andar (piso a +4,00, na cota da laje atual)</h3>
+  <h3>1º andar (piso a +4,40, em estrutura metálica sobre a laje atual)</h3>
   <table>
     <tr><td>Suíte Master (quarto com janela de 2,80 m para a rua)</td><td>14,8 m²</td></tr>
     <tr><td>Closet da master</td><td>6,3 m²</td></tr>
@@ -143,7 +144,7 @@ body.m-existente [data-modelo=existente], body.m-proposta [data-modelo=proposta]
   <ul>
     <li>A parede da direita fica na divisa: não pode ter janela (Código Civil). As suítes abrem para a frente, para a piscina e para os fundos.</li>
     <li>Os banheiros de cima ficam sobre os banheiros de baixo, o que facilita a hidráulica.</li>
-    <li>A fundação atual é de casa térrea: sapatas pequenas e terreno com 1,5 kg/cm². O 1º andar e o terraço exigem projeto estrutural com cálculo e ART.</li>
+    <li>A estrutura atual é de casa térrea e não recebe carga nova. O 1º andar e o terraço ficam numa estrutura metálica independente: <a href="estrutura.html" style="color:var(--accent)">ver o anteprojeto</a>, que vai para cálculo e ART do engenheiro.</li>
   </ul>
   </div>
   <div data-modelo="existente">
@@ -246,7 +247,7 @@ body.m-existente [data-modelo=existente], body.m-proposta [data-modelo=proposta]
       document.getElementById('aerialView').click();
     }
   });
-  viewHome('viewerCanvas', file, onerror, onprogression, {
+  var preview = viewHome('viewerCanvas', file, onerror, onprogression, {
     roundsPerMinute: 0,
     navigationPanel: 'default',
     level: 'Casa completa',
@@ -257,6 +258,39 @@ body.m-existente [data-modelo=existente], body.m-proposta [data-modelo=proposta]
     selectableCameras: cams,
     activateCameraSwitchKey: true
   });
+
+  // Botão direito: arrastar para andar (visita virtual) ou aproximar e girar (vista aérea).
+  // Os eventos são capturados antes do visualizador, para o botão direito não girar a vista.
+  window.casa3d = preview;
+  var canvas = document.getElementById('viewerCanvas'), drag = null;
+  canvas.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+  window.addEventListener('mousedown', function (e) {
+    if (e.button === 2 && e.target === canvas) {
+      drag = { x: e.clientX, y: e.clientY };
+      canvas.focus();
+      e.preventDefault(); e.stopImmediatePropagation();
+    }
+  }, true);
+  window.addEventListener('mousemove', function (e) {
+    if (!drag) return;
+    var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    drag = { x: e.clientX, y: e.clientY };
+    var c = preview && preview.getController ? preview.getController() : null;
+    if (c) {
+      var k = e.shiftKey ? 6 : 2; // centímetros por pixel arrastado
+      if (document.getElementById('virtualVisit').checked) {
+        c.moveCamera(-dy * k);          // arrastar para cima = andar para a frente
+        c.moveCameraSideways(dx * k);   // arrastar para o lado = andar de lado
+      } else {
+        c.moveCamera(-dy * k * 3);      // vista aérea: aproximar / afastar
+        c.rotateCameraYaw(dx * 0.006);  // e girar em volta da casa
+      }
+    }
+    e.preventDefault(); e.stopImmediatePropagation();
+  }, true);
+  window.addEventListener('mouseup', function (e) {
+    if (drag && e.button === 2) { drag = null; e.preventDefault(); e.stopImmediatePropagation(); }
+  }, true);
 })();
 </script>
 </body>
