@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Casa Buona Vita — 3D</title>
+<meta name="description" content="Modelo 3D navegável da Casa Buona Vita, feito no formato do Sweet Home 3D a partir das plantas do projeto.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23222'/%3E%3Cpath d='M12 34 32 16l20 18v16H12z' fill='%23f3efe7'/%3E%3Crect x='28' y='36' width='9' height='14' fill='%238a5a36'/%3E%3C/svg%3E">
+<script src="lib/big.min.js"></script>
+<script src="lib/gl-matrix-min.js"></script>
+<script src="lib/jszip.min.js"></script>
+<script src="lib/core.min.js"></script>
+<script src="lib/geom.min.js"></script>
+<script src="lib/stroke.min.js"></script>
+<script src="lib/batik-svgpathparser.min.js"></script>
+<script src="lib/jsXmlSaxParser.min.js"></script>
+<script src="lib/triangulator.min.js"></script>
+<script src="lib/viewmodel.min.js"></script>
+<script src="lib/viewhome.min.js"></script>
+<style>
+:root {
+  --bg: #1d1c1a; --panel: rgba(28, 27, 25, 0.86); --line: rgba(255, 255, 255, 0.12);
+  --text: #f4f1ea; --muted: #b9b3a7; --accent: #c8955f; --accent-ink: #1d1c1a;
+  --radius: 14px; --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); overflow: hidden; }
+#viewerCanvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; outline: none; touch-action: none; background: #a9ccea; }
+.panel { position: fixed; background: var(--panel); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+#top { top: 16px; left: 16px; width: min(360px, calc(100vw - 32px)); padding: 16px 16px 14px; }
+h1 { font-size: 20px; margin: 0; letter-spacing: .2px; }
+.sub { color: var(--muted); font-size: 13px; margin: 4px 0 12px; line-height: 1.4; }
+.seg { display: flex; background: rgba(255,255,255,.06); border: 1px solid var(--line); border-radius: 10px; padding: 3px; gap: 3px; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label { flex: 1; text-align: center; font-size: 13px; padding: 8px 6px; border-radius: 8px; cursor: pointer; color: var(--muted); user-select: none; }
+.seg input:checked + label { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.seg input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 1px; }
+select { width: 100%; margin-top: 10px; padding: 9px 10px; border-radius: 10px; border: 1px solid var(--line); background: rgba(255,255,255,.06); color: var(--text); font: inherit; font-size: 14px; }
+select option { color: #111; }
+.row { display: flex; gap: 8px; margin-top: 10px; }
+.btn { flex: 1; display: inline-flex; justify-content: center; align-items: center; gap: 6px; padding: 9px 10px; border-radius: 10px; border: 1px solid var(--line); background: rgba(255,255,255,.06); color: var(--text); font: inherit; font-size: 13px; cursor: pointer; text-decoration: none; }
+.btn:hover { background: rgba(255,255,255,.12); }
+#help, #info { top: 16px; right: 16px; width: min(380px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; padding: 16px; display: none; font-size: 14px; line-height: 1.5; }
+#help.open, #info.open { display: block; }
+#help h2, #info h2 { font-size: 16px; margin: 0 0 8px; }
+#info h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); margin: 14px 0 6px; }
+.close { float: right; background: none; border: 0; color: var(--muted); font-size: 22px; line-height: 1; cursor: pointer; padding: 0 2px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+td { padding: 4px 0; border-bottom: 1px solid var(--line); }
+td:last-child { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+kbd { font-family: inherit; font-size: 12px; padding: 1px 6px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; background: rgba(255,255,255,.06); }
+ul { padding-left: 18px; margin: 6px 0; }
+.note { color: var(--muted); font-size: 12.5px; }
+#progress { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 18px 22px; width: min(360px, calc(100vw - 32px)); text-align: center; }
+#progress progress { width: 100%; accent-color: var(--accent); }
+#progressLabel { font-size: 12px; color: var(--muted); margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body > div[id^="div"] { display: none !important; } /* painel de setas padrão do visualizador */
+.nav { position: fixed; left: 16px; bottom: 16px; display: grid; grid-template-columns: repeat(3, 44px); grid-template-rows: repeat(2, 44px); gap: 6px; z-index: 5; }
+.nav button { touch-action: none; user-select: none; -webkit-user-select: none; width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); color: var(--text); font-size: 16px; cursor: pointer; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.nav button:active { background: var(--accent); color: var(--accent-ink); }
+.nav [data-simulated-key=UP] { grid-column: 2; grid-row: 1; }
+.nav [data-simulated-key=LEFT] { grid-column: 1; grid-row: 2; }
+.nav [data-simulated-key=DOWN] { grid-column: 2; grid-row: 2; }
+.nav [data-simulated-key=RIGHT] { grid-column: 3; grid-row: 2; }
+#foot { position: fixed; right: 16px; bottom: 12px; font-size: 11px; color: rgba(255,255,255,.85); text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+#foot a { color: inherit; }
+@media (max-width: 640px) {
+  #top { top: 10px; left: 10px; width: calc(100vw - 20px); padding: 12px; }
+  #top .sub { display: none; }
+  #help, #info { top: auto; bottom: 10px; right: 10px; left: 10px; width: auto; max-height: 60vh; }
+  #foot { display: none; }
+}
+</style>
+</head>
+<body>
+<canvas id="viewerCanvas" tabindex="1" aria-label="Vista 3D da casa"></canvas>
+
+<div id="top" class="panel">
+  <h1>Casa Buona Vita</h1>
+  <p class="sub">Modelo 3D navegável da casa existente, montado com as medidas das plantas e dos cortes do projeto arquitetônico (mar/2021).</p>
+  <div class="seg" role="radiogroup" aria-label="Modo de visualização">
+    <input id="aerialView" name="cameraType" type="radio"><label for="aerialView">Vista aérea</label>
+    <input id="virtualVisit" name="cameraType" type="radio"><label for="virtualVisit">Visita virtual</label>
+  </div>
+  <select id="levelsAndCameras" aria-label="Pontos de vista"></select>
+  <div class="row">
+    <button class="btn" id="btnHelp" type="button">Como navegar</button>
+    <button class="btn" id="btnInfo" type="button">Sobre a casa</button>
+  </div>
+</div>
+
+<div id="help" class="panel" role="dialog" aria-label="Como navegar">
+  <button class="close" data-close aria-label="Fechar">×</button>
+  <h2>Como navegar</h2>
+  <p><b>Vista aérea</b>: arraste para girar em volta da casa; use a roda do mouse (ou pinça no celular) para aproximar.</p>
+  <p><b>Visita virtual</b>: você anda dentro da casa na altura dos olhos.</p>
+  <ul>
+    <li><kbd>↑</kbd> <kbd>↓</kbd> ou <kbd>W</kbd> <kbd>S</kbd>: andar para frente e para trás</li>
+    <li><kbd>←</kbd> <kbd>→</kbd> ou arrastar: virar</li>
+    <li><kbd>Shift</kbd>: andar mais rápido</li>
+    <li><kbd>Page Up</kbd> / <kbd>Page Down</kbd>: olhar para cima e para baixo</li>
+    <li><kbd>Espaço</kbd>: alterna entre vista aérea e visita</li>
+  </ul>
+  <p class="note">No celular, arraste com um dedo para virar e use as setas na tela. A lista "pontos de vista" leva direto a cada ambiente.</p>
+</div>
+
+<div id="info" class="panel" role="dialog" aria-label="Sobre a casa">
+  <button class="close" data-close aria-label="Fechar">×</button>
+  <h2>Sobre o modelo</h2>
+  <p class="note">Casa térrea em lote de 10 × 20 m. Paredes, vãos, portas e janelas foram medidos nos vetores da planta baixa (escala 1:75). Alturas tiradas dos cortes.</p>
+  <h3>Quadro de áreas (projeto)</h3>
+  <table>
+    <tr><td>Área do lote</td><td>200,00 m²</td></tr>
+    <tr><td>Área construída (térreo)</td><td>127,90 m²</td></tr>
+    <tr><td>Taxa de ocupação</td><td>63,95%</td></tr>
+    <tr><td>Área permeável</td><td>31,80 m² (15,90%)</td></tr>
+  </table>
+  <h3>Ambientes</h3>
+  <table>
+    <tr><td>Sala de estar (pé-direito 5,00 m)</td><td>18,80 m²</td></tr>
+    <tr><td>Suíte master</td><td>13,85 m²</td></tr>
+    <tr><td>Área gourmet</td><td>11,67 m²</td></tr>
+    <tr><td>Suíte</td><td>9,66 m²</td></tr>
+    <tr><td>Quarto</td><td>9,66 m²</td></tr>
+    <tr><td>Cozinha</td><td>8,04 m²</td></tr>
+    <tr><td>Garagem</td><td>8,75 m²</td></tr>
+    <tr><td>Piscina (prainha e parte funda)</td><td>6,79 m²</td></tr>
+    <tr><td>Closet</td><td>6,35 m²</td></tr>
+    <tr><td>Circulação</td><td>6,33 m²</td></tr>
+    <tr><td>Á. serviço</td><td>4,99 m²</td></tr>
+    <tr><td>Banheiro da suíte master</td><td>4,00 m²</td></tr>
+    <tr><td>Banheiro social</td><td>3,00 m²</td></tr>
+    <tr><td>Banheiro da suíte</td><td>2,86 m²</td></tr>
+    <tr><td>Lavabo</td><td>1,43 m²</td></tr>
+  </table>
+  <h3>Alturas</h3>
+  <ul>
+    <li>Forro dos ambientes: 3,00 m; laje e platibanda: +4,00 m</li>
+    <li>Sala: forro a 5,00 m e laje a +5,90 m</li>
+    <li>Torre da caixa-d'água (2 × 1.000 L): 4,90 m</li>
+    <li>Piscina: parte funda com 1,50 m e prainha com 1,00 m</li>
+  </ul>
+  <p class="note">Móveis, cores e texturas são ilustrativos. Os acabamentos da fachada seguem a maquete eletrônica do projeto.</p>
+  <h3>Arquivo</h3>
+  <p class="note">O arquivo abre no <a href="https://www.sweethome3d.com/pt/" style="color:var(--accent)">Sweet Home 3D</a> (gratuito) para edição. <a href="creditos.html" style="color:var(--accent)">Créditos dos modelos 3D</a>.</p>
+</div>
+
+<div id="progress" class="panel">
+  <progress id="viewerProgress" value="0" max="200"></progress>
+  <div id="progressLabel">Carregando…</div>
+</div>
+<div class="nav" aria-label="Setas de navegação"><button type="button" data-simulated-key="UP" aria-label="Andar para frente">▲</button><button type="button" data-simulated-key="LEFT" aria-label="Virar à esquerda">◀</button><button type="button" data-simulated-key="DOWN" aria-label="Andar para trás">▼</button><button type="button" data-simulated-key="RIGHT" aria-label="Virar à direita">▶</button></div>
+<div id="foot"><a id="dl" href="buonavita-existente.sh3d" download>Baixar .sh3d</a> · Sweet Home 3D JS Viewer (GPL)</div>
+
+<script>
+(function () {
+  var q = new URLSearchParams(location.search);
+  var file = q.get('modelo') === 'proposta' ? 'buonavita-proposta.sh3d' : 'buonavita-existente.sh3d';
+  document.getElementById('dl').href = file;
+  var cams = ['Fachada', 'Sala de estar', 'Gourmet e cozinha', 'Piscina e deck', 'Suíte master', 'Circulação'];
+  function toggle(id) {
+    ['help', 'info'].forEach(function (p) {
+      var el = document.getElementById(p);
+      el.classList.toggle('open', p === id && !el.classList.contains('open'));
+    });
+  }
+  document.getElementById('btnHelp').onclick = function () { toggle('help'); };
+  document.getElementById('btnInfo').onclick = function () { toggle('info'); };
+  document.querySelectorAll('[data-close]').forEach(function (b) { b.onclick = function () { toggle(null); }; });
+  var onerror = function (err) {
+    var lbl = document.getElementById('progressLabel');
+    lbl.textContent = err == 'No WebGL' ? 'Seu navegador não tem suporte a WebGL.' : 'Erro ao carregar o modelo: ' + (err && err.message ? err.message : err);
+    console.log(err && err.stack ? err.stack : err);
+  };
+  var onprogression = function (part, info, percentage) {
+    var progress = document.getElementById('viewerProgress');
+    if (part === HomeRecorder.READING_HOME) {
+      progress.value = percentage * 100;
+    } else if (part === Node3D.READING_MODEL) {
+      progress.value = 100 + percentage * 100;
+      if (percentage === 1) document.getElementById('progress').style.display = 'none';
+    }
+    document.getElementById('progressLabel').textContent = (percentage ? Math.floor(percentage * 100) + '% ' : '') + (part === Node3D.READING_MODEL ? 'Carregando modelos 3D' : 'Abrindo a casa');
+  };
+  var levelNames = ['Casa completa', 'Térreo — sem cobertura'];
+  document.getElementById('levelsAndCameras').addEventListener('change', function (e) {
+    var t = e.target.options[e.target.selectedIndex].text;
+    if (levelNames.indexOf(t) >= 0 && !document.getElementById('aerialView').checked) {
+      document.getElementById('aerialView').click();
+    }
+  });
+  viewHome('viewerCanvas', file, onerror, onprogression, {
+    roundsPerMinute: 0,
+    navigationPanel: 'default',
+    level: 'Casa completa',
+    selectableLevels: ['Casa completa', 'Térreo — sem cobertura'],
+    aerialViewButtonId: 'aerialView',
+    virtualVisitButtonId: 'virtualVisit',
+    levelsAndCamerasListId: 'levelsAndCameras',
+    selectableCameras: cams,
+    activateCameraSwitchKey: true
+  });
+})();
+</script>
+</body>
+</html>
