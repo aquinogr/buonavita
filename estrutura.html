@@ -46,7 +46,7 @@ ol.passos b { color: var(--accent); }
 .chk li::before { content: "✔ "; color: #2e7d32; font-weight: 700; }
 .chk li.p::before { content: "○ "; color: #8a4b00; }
 footer { padding-top: 16px; padding-bottom: 24px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); }
-@media print { body { background: #fff; } nav.top { display: none; } figure, table { break-inside: avoid; } }
+@media print { body { background: #fff; } nav.top, .noprint { display: none; } .grid { display: block; } figure { break-inside: avoid; page-break-inside: avoid; margin: 0 0 10mm; } figure svg { max-height: 235mm; width: auto; max-width: 100%; margin: 0 auto; } table, .box { break-inside: avoid; } h2 { break-after: avoid; } }
 </style>
 </head>
 <body>
