@@ -62,6 +62,16 @@ body > div[id^="div"] { display: none !important; } /* painel de setas padrão d
 .nav [data-simulated-key=LEFT] { grid-column: 1; grid-row: 2; }
 .nav [data-simulated-key=DOWN] { grid-column: 2; grid-row: 2; }
 .nav [data-simulated-key=RIGHT] { grid-column: 3; grid-row: 2; }
+.tabs { display: flex; gap: 6px; margin: 0 0 10px; }
+.tabs a { flex: 1; text-align: center; font-size: 12.5px; padding: 7px 6px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); text-decoration: none; }
+.tabs a[aria-current=page] { background: rgba(200,149,95,.18); border-color: var(--accent); color: var(--text); font-weight: 600; }
+[data-modelo] { display: none; }
+body.m-existente [data-modelo=existente], body.m-proposta [data-modelo=proposta] { display: revert; }
+#lightbox { position: fixed; inset: 0; background: rgba(0,0,0,.88); display: none; align-items: center; justify-content: center; z-index: 20; padding: 16px; flex-direction: column; gap: 10px; }
+#lightbox.open { display: flex; }
+#lightbox img { max-width: 100%; max-height: calc(100vh - 90px); border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,.5); }
+#lightbox p { margin: 0; color: #ddd; font-size: 13px; text-align: center; max-width: 900px; }
+#lightbox .close { position: absolute; top: 12px; right: 18px; color: #fff; font-size: 30px; }
 #foot { position: fixed; right: 16px; bottom: 12px; font-size: 11px; color: rgba(255,255,255,.85); text-shadow: 0 1px 3px rgba(0,0,0,.6); }
 #foot a { color: inherit; }
 @media (max-width: 640px) {
@@ -77,7 +87,9 @@ body > div[id^="div"] { display: none !important; } /* painel de setas padrão d
 
 <div id="top" class="panel">
   <h1>Casa Buona Vita</h1>
-  <p class="sub">Modelo 3D navegável da casa existente, montado com as medidas das plantas e dos cortes do projeto arquitetônico (mar/2021).</p>
+  <p class="sub" data-modelo="existente">Modelo 3D navegável da casa existente, montado com as medidas das plantas e dos cortes do projeto arquitetônico (mar/2021).</p>
+  <p class="sub" data-modelo="proposta">Estudo de ampliação: escada no lugar do quarto, 1º andar com duas suítes (master com closet e vista para a frente) e terraço com rede.</p>
+  <nav class="tabs" aria-label="Versão do projeto"><a id="tabE" href="./">Casa atual</a><a id="tabP" href="./?modelo=proposta">Proposta 1º andar</a></nav>
   <div class="seg" role="radiogroup" aria-label="Modo de visualização">
     <input id="aerialView" name="cameraType" type="radio"><label for="aerialView">Vista aérea</label>
     <input id="virtualVisit" name="cameraType" type="radio"><label for="virtualVisit">Visita virtual</label>
@@ -87,6 +99,7 @@ body > div[id^="div"] { display: none !important; } /* painel de setas padrão d
     <button class="btn" id="btnHelp" type="button">Como navegar</button>
     <button class="btn" id="btnInfo" type="button">Sobre a casa</button>
   </div>
+  <div class="row" data-modelo="existente"><button class="btn" id="btnFoto" type="button">Imagem realista da fachada</button></div>
 </div>
 
 <div id="help" class="panel" role="dialog" aria-label="Como navegar">
@@ -106,6 +119,33 @@ body > div[id^="div"] { display: none !important; } /* painel de setas padrão d
 
 <div id="info" class="panel" role="dialog" aria-label="Sobre a casa">
   <button class="close" data-close aria-label="Fechar">×</button>
+  <div data-modelo="proposta">
+  <h2>Proposta de ampliação (estudo)</h2>
+  <p class="note">Primeiro estudo arquitetônico, para discutir. O projeto estrutural de reforço vem depois que esta planta for aprovada.</p>
+  <h3>Térreo</h3>
+  <ul>
+    <li>Sai o Quarto (9,66 m²). No lugar entram a escada em U (20 degraus de 17,5 cm, pisos de 28 cm) e um estar integrado à gourmet e à sala.</li>
+    <li>A sala perde o pé-direito duplo: o 1º andar passa por cima dela.</li>
+  </ul>
+  <h3>1º andar (piso a +4,00, na cota da laje atual)</h3>
+  <table>
+    <tr><td>Suíte Master (quarto com janela de 2,80 m para a rua)</td><td>14,8 m²</td></tr>
+    <tr><td>Closet da master</td><td>6,3 m²</td></tr>
+    <tr><td>Banho da master</td><td>5,8 m²</td></tr>
+    <tr><td>Suíte 2 (com bancada de estudo)</td><td>14,5 m²</td></tr>
+    <tr><td>Banho da suíte 2</td><td>4,8 m²</td></tr>
+    <tr><td>Corredor e chegada da escada</td><td>3,5 m²</td></tr>
+    <tr><td>Terraço com pergolado e rede (sobre a gourmet e a garagem)</td><td>34,2 m²</td></tr>
+    <tr><td>Área construída nova (projeção)</td><td>≈ 65 m²</td></tr>
+  </table>
+  <h3>Pontos de atenção</h3>
+  <ul>
+    <li>A parede da direita fica na divisa: não pode ter janela (Código Civil). As suítes abrem para a frente, para a piscina e para os fundos.</li>
+    <li>Os banheiros de cima ficam sobre os banheiros de baixo, o que facilita a hidráulica.</li>
+    <li>A fundação atual é de casa térrea: sapatas pequenas e terreno com 1,5 kg/cm². O 1º andar e o terraço exigem projeto estrutural com cálculo e ART.</li>
+  </ul>
+  </div>
+  <div data-modelo="existente">
   <h2>Sobre o modelo</h2>
   <p class="note">Casa térrea em lote de 10 × 20 m. Paredes, vãos, portas e janelas foram medidos nos vetores da planta baixa (escala 1:75). Alturas tiradas dos cortes.</p>
   <h3>Quadro de áreas (projeto)</h3>
@@ -143,6 +183,13 @@ body > div[id^="div"] { display: none !important; } /* painel de setas padrão d
   <p class="note">Móveis, cores e texturas são ilustrativos. Os acabamentos da fachada seguem a maquete eletrônica do projeto.</p>
   <h3>Arquivo</h3>
   <p class="note">O arquivo abre no <a href="https://www.sweethome3d.com/pt/" style="color:var(--accent)">Sweet Home 3D</a> (gratuito) para edição. <a href="creditos.html" style="color:var(--accent)">Créditos dos modelos 3D</a>.</p>
+  </div>
+</div>
+
+<div id="lightbox" role="dialog" aria-label="Imagem realista da fachada">
+  <button class="close" id="fotoClose" aria-label="Fechar">×</button>
+  <img id="fotoImg" alt="Imagem realista da fachada da casa existente, ao fim da tarde" loading="lazy">
+  <p>Imagem gerada por IA a partir da vista 3D do modelo e da maquete do projeto. É ilustrativa e não substitui o projeto.</p>
 </div>
 
 <div id="progress" class="panel">
@@ -155,9 +202,18 @@ body > div[id^="div"] { display: none !important; } /* painel de setas padrão d
 <script>
 (function () {
   var q = new URLSearchParams(location.search);
-  var file = q.get('modelo') === 'proposta' ? 'buonavita-proposta.sh3d' : 'buonavita-existente.sh3d';
+  var prop = q.get('modelo') === 'proposta';
+  var file = prop ? 'buonavita-proposta.sh3d' : 'buonavita-existente.sh3d';
+  document.body.classList.add(prop ? 'm-proposta' : 'm-existente');
+  document.getElementById(prop ? 'tabP' : 'tabE').setAttribute('aria-current', 'page');
   document.getElementById('dl').href = file;
-  var cams = ['Perspectiva da rua', 'Fachada', 'Sala de estar', 'Gourmet e cozinha', 'Piscina e deck', 'Suíte master', 'Circulação'];
+  var cams = prop
+    ? ['Perspectiva da rua', 'Fachada', 'Terraço com rede', 'Suíte Master (superior)', 'Suíte 2 (superior)', 'Chegada da escada (superior)', 'Escada (térreo)', 'Sala de estar', 'Gourmet e cozinha', 'Piscina e deck']
+    : ['Perspectiva da rua', 'Fachada', 'Sala de estar', 'Gourmet e cozinha', 'Piscina e deck', 'Suíte master', 'Circulação'];
+  var foto = document.getElementById('btnFoto'), lb = document.getElementById('lightbox');
+  foto.onclick = function () { document.getElementById('fotoImg').src = 'render/fachada.jpg'; lb.classList.add('open'); };
+  document.getElementById('fotoClose').onclick = function () { lb.classList.remove('open'); };
+  lb.onclick = function (e) { if (e.target === lb) lb.classList.remove('open'); };
   function toggle(id) {
     ['help', 'info'].forEach(function (p) {
       var el = document.getElementById(p);
@@ -182,7 +238,7 @@ body > div[id^="div"] { display: none !important; } /* painel de setas padrão d
     }
     document.getElementById('progressLabel').textContent = (percentage ? Math.floor(percentage * 100) + '% ' : '') + (part === Node3D.READING_MODEL ? 'Carregando modelos 3D' : 'Abrindo a casa');
   };
-  var levelNames = ['Casa completa', 'Térreo — sem cobertura'];
+  var levelNames = prop ? ['Casa completa', 'Pavimento superior', 'Térreo — sem cobertura'] : ['Casa completa', 'Térreo — sem cobertura'];
   document.getElementById('levelsAndCameras').addEventListener('change', function (e) {
     var t = e.target.options[e.target.selectedIndex].text;
     if (levelNames.indexOf(t) >= 0 && !document.getElementById('aerialView').checked) {
@@ -193,7 +249,7 @@ body > div[id^="div"] { display: none !important; } /* painel de setas padrão d
     roundsPerMinute: 0,
     navigationPanel: 'default',
     level: 'Casa completa',
-    selectableLevels: ['Casa completa', 'Térreo — sem cobertura'],
+    selectableLevels: levelNames,
     aerialViewButtonId: 'aerialView',
     virtualVisitButtonId: 'virtualVisit',
     levelsAndCamerasListId: 'levelsAndCameras',
