@@ -295,14 +295,19 @@ body.m-existente [data-modelo=existente], body.m-proposta [data-modelo=proposta]
   window.casa3d = preview;
   var canvas = document.getElementById('viewerCanvas'), drag = null;
   canvas.addEventListener('contextmenu', function (e) { e.preventDefault(); });
-  window.addEventListener('mousedown', function (e) {
+  // O visualizador usa eventos de ponteiro (pointerdown/pointermove) e bloqueia os de mouse: o botão direito é
+  // capturado nos eventos de ponteiro (e também nos de mouse, para navegadores sem PointerEvent).
+  function inicio(e) {
     if (e.button === 2 && e.target === canvas) {
       drag = { x: e.clientX, y: e.clientY };
       canvas.focus();
+      if (e.pointerId !== undefined && canvas.setPointerCapture) { try { canvas.setPointerCapture(e.pointerId); } catch (er) {} }
       e.preventDefault(); e.stopImmediatePropagation();
     }
-  }, true);
-  window.addEventListener('mousemove', function (e) {
+  }
+  window.addEventListener('pointerdown', inicio, true);
+  window.addEventListener('mousedown', inicio, true);
+  function movimento(e) {
     if (!drag) return;
     var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
     drag = { x: e.clientX, y: e.clientY };
@@ -318,10 +323,14 @@ body.m-existente [data-modelo=existente], body.m-proposta [data-modelo=proposta]
       }
     }
     e.preventDefault(); e.stopImmediatePropagation();
-  }, true);
-  window.addEventListener('mouseup', function (e) {
+  }
+  window.addEventListener('pointermove', movimento, true);
+  window.addEventListener('mousemove', movimento, true);
+  function fim(e) {
     if (drag && e.button === 2) { drag = null; e.preventDefault(); e.stopImmediatePropagation(); }
-  }, true);
+  }
+  window.addEventListener('pointerup', fim, true);
+  window.addEventListener('mouseup', fim, true);
 })();
 </script>
 </body>
