@@ -124,7 +124,7 @@ body.m-existente [data-modelo=existente], body.m-proposta [data-modelo=proposta]
   <ul>
     <li><kbd>↑</kbd> <kbd>↓</kbd> ou <kbd>W</kbd> <kbd>S</kbd>: andar para frente e para trás</li>
     <li><kbd>←</kbd> <kbd>→</kbd> ou arrastar com o botão esquerdo: virar</li>
-    <li><b>Botão direito</b> arrastando: andar — para cima vai para a frente, para baixo volta, para os lados anda de lado (com <kbd>Shift</kbd>, mais rápido). Na vista aérea, aproxima e gira.</li>
+    <li><b>Botão direito</b> arrastando: andar — para cima vai para a frente, para baixo volta, para os lados anda de lado (com <kbd>Shift</kbd>, mais rápido). Não gira: a câmera anda como num carrinho, também na vista aérea.</li>
     <li><kbd>Shift</kbd>: andar mais rápido</li>
     <li><kbd>Page Up</kbd> / <kbd>Page Down</kbd>: olhar para cima e para baixo</li>
     <li><kbd>Espaço</kbd>: alterna entre vista aérea e visita</li>
@@ -366,12 +366,12 @@ body.m-existente [data-modelo=existente], body.m-proposta [data-modelo=proposta]
   // Vista aérea: o visualizador centraliza e limita a aproximação pelo tamanho de tudo o que está no modelo, inclusive a
   // praça e as ruas do entorno (o centro caía na frente da casa e a pinça não aproximava). Aqui os limites passam a ser
   // só os do lote (10 × 18 m, até a cobertura): a vista gira em volta do meio da casa e a pinça chega a uns 12 m dela.
-  var CASA = [0, 0, 1000, 1800, 900];
+  var CASA = [0, 0, 1000, 1800, 900], desloc = [0, 0]; // desloc: quanto o botão direito já moveu a vista aérea (cm)
   var limitesOriginal = HomeController3D.TopCameraState.prototype.updateAerialViewBoundsFromHomeBounds;
   HomeController3D.TopCameraState.prototype.updateAerialViewBoundsFromHomeBounds = function (v) {
     limitesOriginal.call(this, v);
     var lo = this.aerialViewBoundsLowerPoint, up = this.aerialViewBoundsUpperPoint;
-    if (lo && up) { lo[0] = CASA[0]; lo[1] = CASA[1]; lo[2] = Math.max(lo[2], 0); up[0] = CASA[2]; up[1] = CASA[3]; up[2] = Math.min(up[2], CASA[4]); }
+    if (lo && up) { lo[0] = CASA[0] + desloc[0]; lo[1] = CASA[1] + desloc[1]; lo[2] = Math.max(lo[2], 0); up[0] = CASA[2] + desloc[0]; up[1] = CASA[3] + desloc[1]; up[2] = Math.min(up[2], CASA[4]); }
   };
   var celular = function () { return tela.clientWidth < tela.clientHeight; };
   // Ao abrir: vista aérea a cerca de 26 m do meio da casa (28 m no celular em pé, olhando de frente e mais de cima,
@@ -414,7 +414,8 @@ body.m-existente [data-modelo=existente], body.m-proposta [data-modelo=proposta]
     activateCameraSwitchKey: true
   });
 
-  // Botão direito: arrastar para andar (visita virtual) ou aproximar e girar (vista aérea).
+  // Botão direito: arrastar move a câmera sem girar, como num carrinho: para cima vai para a frente, para baixo volta,
+  // para os lados anda de lado. Vale na visita virtual e na vista aérea (nesta, o ponto em volta do qual ela gira anda junto).
   // Os eventos são capturados antes do visualizador, para o botão direito não girar a vista.
   window.casa3d = preview;
   var canvas = document.getElementById('viewerCanvas'), drag = null;
@@ -442,8 +443,18 @@ body.m-existente [data-modelo=existente], body.m-proposta [data-modelo=proposta]
         c.moveCamera(-dy * k);          // arrastar para cima = andar para a frente
         c.moveCameraSideways(dx * k);   // arrastar para o lado = andar de lado
       } else {
-        c.moveCamera(-dy * k * 3);      // vista aérea: aproximar / afastar
-        c.rotateCameraYaw(dx * 0.006);  // e girar em volta da casa
+        var st = c.getTopCameraState && c.getTopCameraState();
+        if (st && st.aerialViewBoundsLowerPoint) {
+          var dist = st.getCameraToAerialViewCenterDistance(), yaw = preview.getHome().getTopCamera().getYaw();
+          var kk = (e.shiftKey ? 3 : 1) * dist / 1300;           // centímetros por pixel (≈ 2 cm a 26 m), proporcional à distância
+          var frente = -dy * kk, lado = dx * kk;
+          var mx = -Math.sin(yaw) * frente - Math.cos(yaw) * lado, my = Math.cos(yaw) * frente - Math.sin(yaw) * lado;
+          var nx = Math.max(-1500, Math.min(1500, desloc[0] + mx)), ny = Math.max(-1500, Math.min(2500, desloc[1] + my));
+          mx = nx - desloc[0]; my = ny - desloc[1]; desloc[0] = nx; desloc[1] = ny;
+          st.aerialViewBoundsLowerPoint[0] += mx; st.aerialViewBoundsUpperPoint[0] += mx;
+          st.aerialViewBoundsLowerPoint[1] += my; st.aerialViewBoundsUpperPoint[1] += my;
+          st.placeCameraAt(dist, false);
+        }
       }
     }
     e.preventDefault(); e.stopImmediatePropagation();
