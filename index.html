@@ -341,18 +341,55 @@ body.m-existente [data-modelo=existente], body.m-proposta [data-modelo=proposta]
       progress.value = percentage * 100;
     } else if (part === Node3D.READING_MODEL) {
       progress.value = 100 + percentage * 100;
-      if (percentage === 1) document.getElementById('progress').style.display = 'none';
+      if (percentage === 1) { document.getElementById('progress').style.display = 'none'; setTimeout(vistaAereaNaCasa, 0); }
     }
     document.getElementById('progressLabel').textContent = (percentage ? Math.floor(percentage * 100) + '% ' : '') + (part === Node3D.READING_MODEL ? 'Carregando modelos 3D' : 'Abrindo a casa');
   };
-  var levelNames = prop ? ['Casa completa', 'Pavimento superior', 'Térreo — sem cobertura'] : ['Casa completa', 'Térreo — sem cobertura'];
+  // Celular em pé: o visualizador usa o campo de visão na horizontal, e com a tela estreita a imagem fica "aberta"
+  // demais (tudo parece longe). Com a tela mais alta do que larga, o campo de visão passa a valer na vertical.
+  var tela = document.getElementById('viewerCanvas'), preview = null;
+  var fovOriginal = HTMLCanvas3D.prototype.setFieldOfView;
+  HTMLCanvas3D.prototype.setFieldOfView = function (a) {
+    this.fovPedido = a;
+    var asp = tela.clientWidth / tela.clientHeight;
+    fovOriginal.call(this, asp > 0 && asp < 1 ? 2 * Math.atan(Math.tan(a / 2) * asp) : a);
+  };
+  window.addEventListener('resize', function () {
+    var c3 = preview && preview.getComponent3D && preview.getComponent3D();
+    if (c3 && c3.canvas3D && c3.canvas3D.fovPedido) c3.canvas3D.setFieldOfView(c3.canvas3D.fovPedido);
+  });
+  // Vista aérea: o visualizador limita a aproximação pelo tamanho de tudo o que está no modelo, inclusive a praça e as ruas.
+  // Girando em volta só da casa (paredes selecionadas), dá para chegar bem mais perto com a roda do mouse ou com a pinça.
+  function vistaAereaNaCasa() {
+    try {
+      var home = preview.getHome(), prefs = preview.getUserPreferences();
+      prefs.setAerialViewCenteredOnSelectionEnabled(true);
+      home.setSelectedItems(home.getWalls().slice());
+      setTimeout(aproximar, 400);
+    } catch (e) { console.log(e); }
+  }
+  function aproximar() {
+    try {
+      var home = preview.getHome();
+      // abre perto da casa: cerca de 28 m na tela deitada e 36 m no celular em pé (antes ficava a uns 57 m)
+      var ws = home.getWalls(), cx = 0, cy = 0;
+      for (var i = 0; i < ws.length; i++) { cx += (ws[i].getXStart() + ws[i].getXEnd()) / 2; cy += (ws[i].getYStart() + ws[i].getYEnd()) / 2; }
+      cx /= ws.length; cy /= ws.length;
+      var cam = home.getTopCamera(), d = Math.hypot(cam.getX() - cx, cam.getY() - cy, cam.getZ() - 300);
+      var alvo = tela.clientWidth < tela.clientHeight ? 3600 : 2800;
+      if (home.getCamera() === cam && d > alvo) preview.getController().moveCamera((d - alvo) / 5);
+      // celular em pé: olhar de frente, pela rua, para o comprimento da casa caber na altura da tela
+      if (home.getCamera() === cam && tela.clientWidth < tela.clientHeight) { preview.getController().rotateCameraYaw(Math.PI - cam.getYaw()); preview.getController().rotateCameraPitch(0.85 - cam.getPitch()); }
+    } catch (e) { console.log(e); }
+  }
+  var levelNames = prop ?['Casa completa', 'Pavimento superior', 'Térreo — sem cobertura'] : ['Casa completa', 'Térreo — sem cobertura'];
   document.getElementById('levelsAndCameras').addEventListener('change', function (e) {
     var t = e.target.options[e.target.selectedIndex].text;
     if (levelNames.indexOf(t) >= 0 && !document.getElementById('aerialView').checked) {
       document.getElementById('aerialView').click();
     }
   });
-  var preview = viewHome('viewerCanvas', file, onerror, onprogression, {
+  preview = viewHome('viewerCanvas', file, onerror, onprogression, {
     roundsPerMinute: 0,
     navigationPanel: 'default',
     level: 'Casa completa',
