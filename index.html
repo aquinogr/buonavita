@@ -89,7 +89,7 @@ body.m-existente [data-modelo=existente], body.m-proposta [data-modelo=proposta]
   <h1>Casa Buona Vita</h1>
   <p class="sub" data-modelo="existente">Modelo 3D navegável da casa existente, montado com as medidas das plantas e dos cortes do projeto arquitetônico (mar/2021).</p>
   <p class="sub" data-modelo="proposta">Opção 1: escada no lugar do quarto, 1º andar com duas suítes (master com closet e vista para a frente) e terraço com rede.</p>
-  <p class="sub" data-modelo="proposta3">Opção 3 (concreto armado): 1º andar só nos fundos, com suíte master grande, escritório e lavabo; a sala mantém o pé-direito duplo.</p>
+  <p class="sub" data-modelo="proposta3">Opção 3 (concreto armado): 1º andar só nos fundos, com suíte master grande, escritório, lavabo e terraço sobre a cozinha; a sala mantém o pé-direito duplo.</p>
   <p class="sub" data-modelo="proposta2">Opção 2: saem os dois quartos da piscina (estar integrado e varanda coberta); em cima, suíte master com terraço, outra suíte e dois quartos.</p>
   <nav class="tabs" aria-label="Versão do projeto"><a id="tabE" href="./">Casa atual</a><a id="tabP" href="./?modelo=proposta">Opção 1</a><a id="tabP2" href="./?modelo=proposta2">Opção 2</a><a id="tabP3" href="./?modelo=proposta3">Opção 3</a></nav>
   <div class="seg" role="radiogroup" aria-label="Modo de visualização">
@@ -138,8 +138,9 @@ body.m-existente [data-modelo=existente], body.m-proposta [data-modelo=proposta]
     <tr><td>Suíte Master, com janela para a piscina</td><td>18,7 m²</td></tr>
     <tr><td>Closet (janela para o poço de luz)</td><td>5,8 m²</td></tr>
     <tr><td>Banho da master (com clarabóia)</td><td>6,0 m²</td></tr>
-    <tr><td>Escritório (pode virar quarto)</td><td>7,2 m²</td></tr>
+    <tr><td>Escritório (abre para o terraço; pode virar quarto)</td><td>7,2 m²</td></tr>
     <tr><td>Lavabo</td><td>1,4 m²</td></tr>
+    <tr><td>Terraço descoberto sobre a cozinha</td><td>16,8 m²</td></tr>
     <tr><td>Área construída nova (projeção)</td><td>≈ 55,5 m²</td></tr>
   </table>
   <p class="note">Estrutura independente de concreto armado: a laje e as fundações atuais não recebem carga. Uma caixa de 1.000 L na cobertura nova atende o 1º andar.</p>
@@ -261,7 +262,7 @@ body.m-existente [data-modelo=existente], body.m-proposta [data-modelo=proposta]
   document.getElementById(prop3 ? 'tabP3' : prop2 ? 'tabP2' : prop ? 'tabP' : 'tabE').setAttribute('aria-current', 'page');
   document.getElementById('dl').href = file;
   var cams = prop3
-    ? ['Perspectiva da rua', 'Fachada', 'Sala com pé-direito duplo', 'Escada (térreo)', 'Suíte Master (superior)', 'Escritório (superior)', 'Chegada da escada (superior)', 'Fundos vistos do deck', 'Gourmet e cozinha', 'Piscina e deck']
+    ? ['Perspectiva da rua', 'Fachada', 'Sala com pé-direito duplo', 'Escada (térreo)', 'Suíte Master (superior)', 'Escritório (superior)', 'Chegada da escada (superior)', 'Terraço sobre a cozinha (superior)', 'Terraço visto do escritório', 'Fundos vistos do deck', 'Gourmet e cozinha', 'Piscina e deck']
     : prop2
     ? ['Perspectiva da rua', 'Fachada', 'Estar integrado à piscina', 'Varanda coberta e piscina', 'Escada (térreo)', 'Suíte Master (superior)', 'Terraço da master', 'Suíte 2 (frente)', 'Quarto 1 (piscina)', 'Quarto 2 (fundos)', 'Corredor (superior)', 'Sala de estar', 'Gourmet e cozinha']
     : prop
