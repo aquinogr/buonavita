@@ -66,7 +66,7 @@ body > div[id^="div"] { display: none !important; } /* painel de setas padrão d
 .tabs a { flex: 1; text-align: center; font-size: 12.5px; padding: 7px 6px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); text-decoration: none; }
 .tabs a[aria-current=page] { background: rgba(200,149,95,.18); border-color: var(--accent); color: var(--text); font-weight: 600; }
 [data-modelo] { display: none; }
-body.m-existente [data-modelo=existente], body.m-proposta [data-modelo=proposta], body.m-proposta2 [data-modelo=proposta2] { display: revert; }
+body.m-existente [data-modelo=existente], body.m-proposta [data-modelo=proposta], body.m-proposta2 [data-modelo=proposta2], body.m-proposta3 [data-modelo=proposta3] { display: revert; }
 #lightbox { position: fixed; inset: 0; background: rgba(0,0,0,.88); display: none; align-items: center; justify-content: center; z-index: 20; padding: 16px; flex-direction: column; gap: 10px; }
 #lightbox.open { display: flex; }
 #lightbox img { max-width: 100%; max-height: calc(100vh - 90px); border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,.5); }
@@ -89,8 +89,9 @@ body.m-existente [data-modelo=existente], body.m-proposta [data-modelo=proposta]
   <h1>Casa Buona Vita</h1>
   <p class="sub" data-modelo="existente">Modelo 3D navegável da casa existente, montado com as medidas das plantas e dos cortes do projeto arquitetônico (mar/2021).</p>
   <p class="sub" data-modelo="proposta">Opção 1: escada no lugar do quarto, 1º andar com duas suítes (master com closet e vista para a frente) e terraço com rede.</p>
+  <p class="sub" data-modelo="proposta3">Opção 3 (concreto armado): 1º andar só nos fundos, com suíte master grande, escritório e lavabo; a sala mantém o pé-direito duplo.</p>
   <p class="sub" data-modelo="proposta2">Opção 2: saem os dois quartos da piscina (estar integrado e varanda coberta); em cima, suíte master com terraço, outra suíte e dois quartos.</p>
-  <nav class="tabs" aria-label="Versão do projeto"><a id="tabE" href="./">Casa atual</a><a id="tabP" href="./?modelo=proposta">Opção 1</a><a id="tabP2" href="./?modelo=proposta2">Opção 2</a></nav>
+  <nav class="tabs" aria-label="Versão do projeto"><a id="tabE" href="./">Casa atual</a><a id="tabP" href="./?modelo=proposta">Opção 1</a><a id="tabP2" href="./?modelo=proposta2">Opção 2</a><a id="tabP3" href="./?modelo=proposta3">Opção 3</a></nav>
   <div class="seg" role="radiogroup" aria-label="Modo de visualização">
     <input id="aerialView" name="cameraType" type="radio"><label for="aerialView">Vista aérea</label>
     <input id="virtualVisit" name="cameraType" type="radio"><label for="virtualVisit">Visita virtual</label>
@@ -102,6 +103,7 @@ body.m-existente [data-modelo=existente], body.m-proposta [data-modelo=proposta]
   </div>
   <div class="row" data-modelo="existente"><button class="btn" id="btnFoto" type="button">Imagem realista da fachada</button></div>
   <div class="row" data-modelo="proposta"><a class="btn" href="projeto.html">Plantas, corte e fachada</a><a class="btn" href="estrutura.html">Estrutural</a></div>
+  <div class="row" data-modelo="proposta3"><a class="btn" href="projeto3.html">Plantas, corte e estrutura</a><a class="btn" href="projeto3.html#comparacao">Comparar opções</a></div>
   <div class="row" data-modelo="proposta2"><a class="btn" href="projeto2.html">Plantas, corte e fachada</a><a class="btn" href="projeto2.html#comparacao">Comparar opções</a></div>
 </div>
 
@@ -123,11 +125,31 @@ body.m-existente [data-modelo=existente], body.m-proposta [data-modelo=proposta]
 
 <div id="info" class="panel" role="dialog" aria-label="Sobre a casa">
   <button class="close" data-close aria-label="Fechar">×</button>
+  <div data-modelo="proposta3">
+  <h2>Opção 3 (estudo, concreto armado)</h2>
+  <h3>Térreo</h3>
+  <ul>
+    <li>Sai só o Quarto. No lugar entra a escada em U de concreto, com degraus de granito claro e guarda-corpo de vidro.</li>
+    <li>A sala mantém o pé-direito duplo; a torre da caixa-d'água e o resto da casa continuam.</li>
+    <li>9 pilares de concreto de 20 × 20 encostados nas paredes, com sapatas novas.</li>
+  </ul>
+  <h3>1º andar (+4,40), só nos fundos</h3>
+  <table>
+    <tr><td>Suíte Master, com janela para a piscina</td><td>18,7 m²</td></tr>
+    <tr><td>Closet (janela para o poço de luz)</td><td>5,8 m²</td></tr>
+    <tr><td>Banho da master (com clarabóia)</td><td>6,0 m²</td></tr>
+    <tr><td>Escritório (pode virar quarto)</td><td>7,2 m²</td></tr>
+    <tr><td>Lavabo</td><td>1,4 m²</td></tr>
+    <tr><td>Área construída nova (projeção)</td><td>≈ 55,5 m²</td></tr>
+  </table>
+  <p class="note">Estrutura independente de concreto armado: a laje e as fundações atuais não recebem carga. Uma caixa de 1.000 L na cobertura nova atende o 1º andar.</p>
+  <p class="note"><a href="projeto3.html" style="color:var(--accent)">Plantas, corte, estrutura de concreto e comparação das 3 opções</a></p>
+  </div>
   <div data-modelo="proposta2">
   <h2>Opção 2 (estudo)</h2>
   <h3>Térreo</h3>
   <ul>
-    <li>Saem a Suíte e o Quarto do lado da piscina. No lugar entra um estar de 4,70 × 5,75 m com porta de vidro de 2,90 m que abre por inteiro para o deck, e pé-direito de cerca de 3,45 m.</li>
+    <li>Saem a Suíte e o Quarto do lado da piscina. No lugar entra um estar de 4,70 × 5,75 m com porta de vidro de 2,75 m que abre por inteiro para o deck, e pé-direito de cerca de 3,45 m.</li>
     <li>Varanda coberta com vidro sobre o deck junto à casa (≈ 6 m²).</li>
     <li>Escada metálica em U, a mesma da opção 1.</li>
   </ul>
@@ -233,12 +255,14 @@ body.m-existente [data-modelo=existente], body.m-proposta [data-modelo=proposta]
 (function () {
   var q = new URLSearchParams(location.search);
   var modelo = q.get('modelo');
-  var prop2 = modelo === 'proposta2', prop = modelo === 'proposta' || prop2;
-  var file = prop2 ? 'buonavita-proposta2.sh3d' : prop ? 'buonavita-proposta.sh3d' : 'buonavita-existente.sh3d';
-  document.body.classList.add(prop2 ? 'm-proposta2' : prop ? 'm-proposta' : 'm-existente');
-  document.getElementById(prop2 ? 'tabP2' : prop ? 'tabP' : 'tabE').setAttribute('aria-current', 'page');
+  var prop3 = modelo === 'proposta3', prop2 = modelo === 'proposta2', prop = modelo === 'proposta' || prop2 || prop3;
+  var file = prop3 ? 'buonavita-proposta3.sh3d' : prop2 ? 'buonavita-proposta2.sh3d' : prop ? 'buonavita-proposta.sh3d' : 'buonavita-existente.sh3d';
+  document.body.classList.add(prop3 ? 'm-proposta3' : prop2 ? 'm-proposta2' : prop ? 'm-proposta' : 'm-existente');
+  document.getElementById(prop3 ? 'tabP3' : prop2 ? 'tabP2' : prop ? 'tabP' : 'tabE').setAttribute('aria-current', 'page');
   document.getElementById('dl').href = file;
-  var cams = prop2
+  var cams = prop3
+    ? ['Perspectiva da rua', 'Fachada', 'Sala com pé-direito duplo', 'Escada (térreo)', 'Suíte Master (superior)', 'Escritório (superior)', 'Chegada da escada (superior)', 'Fundos vistos do deck', 'Gourmet e cozinha', 'Piscina e deck']
+    : prop2
     ? ['Perspectiva da rua', 'Fachada', 'Estar integrado à piscina', 'Varanda coberta e piscina', 'Escada (térreo)', 'Suíte Master (superior)', 'Terraço da master', 'Suíte 2 (frente)', 'Quarto 1 (piscina)', 'Quarto 2 (fundos)', 'Corredor (superior)', 'Sala de estar', 'Gourmet e cozinha']
     : prop
     ? ['Perspectiva da rua', 'Fachada', 'Terraço com rede', 'Suíte Master (superior)', 'Suíte 2 (superior)', 'Chegada da escada (superior)', 'Escada (térreo)', 'Sala de estar', 'Gourmet e cozinha', 'Piscina e deck']
