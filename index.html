@@ -29,6 +29,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
 .panel { position: fixed; background: var(--panel); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 10px 30px rgba(0,0,0,.25); }
 #top { top: 16px; left: 16px; width: min(360px, calc(100vw - 32px)); padding: 16px 16px 14px; }
 h1 { font-size: 20px; margin: 0; letter-spacing: .2px; }
+#top .menu { display: none; position: absolute; top: 9px; right: 10px; font: inherit; font-size: 13px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.08); color: var(--text); cursor: pointer; }
 .sub { color: var(--muted); font-size: 13px; margin: 4px 0 12px; line-height: 1.4; }
 .seg { display: flex; background: rgba(255,255,255,.06); border: 1px solid var(--line); border-radius: 10px; padding: 3px; gap: 3px; }
 .seg input { position: absolute; opacity: 0; pointer-events: none; }
@@ -77,6 +78,9 @@ body.m-existente [data-modelo=existente], body.m-proposta [data-modelo=proposta]
 @media (max-width: 640px) {
   #top { top: 10px; left: 10px; width: calc(100vw - 20px); padding: 12px; }
   #top .sub { display: none; }
+  #top .menu { display: inline-block; }
+  #top.recolhido > :not(h1):not(.menu):not(#levelsAndCameras) { display: none !important; }
+  #top.recolhido select { margin-top: 8px; }
   #help, #info { top: auto; bottom: 10px; right: 10px; left: 10px; width: auto; max-height: 60vh; }
   #foot { display: none; }
 }
@@ -87,6 +91,7 @@ body.m-existente [data-modelo=existente], body.m-proposta [data-modelo=proposta]
 
 <div id="top" class="panel">
   <h1>Casa Buona Vita</h1>
+  <button class="menu" id="btnMenu" type="button" aria-expanded="true">Fechar ▴</button>
   <p class="sub" data-modelo="existente">Modelo 3D navegável da casa existente, montado com as medidas das plantas e dos cortes do projeto arquitetônico (mar/2021).</p>
   <p class="sub" data-modelo="proposta">Opção 1: escada no lugar do quarto, 1º andar com duas suítes (master com closet e vista para a frente) e terraço com rede.</p>
   <p class="sub" data-modelo="proposta3">Opção 3 (concreto armado): 1º andar só nos fundos, com suíte master grande, escritório, lavabo e terraço sobre a cozinha; a sala mantém o pé-direito duplo.</p>
@@ -341,7 +346,7 @@ body.m-existente [data-modelo=existente], body.m-proposta [data-modelo=proposta]
       progress.value = percentage * 100;
     } else if (part === Node3D.READING_MODEL) {
       progress.value = 100 + percentage * 100;
-      if (percentage === 1) { document.getElementById('progress').style.display = 'none'; setTimeout(vistaAereaNaCasa, 0); }
+      if (percentage === 1) document.getElementById('progress').style.display = 'none';
     }
     document.getElementById('progressLabel').textContent = (percentage ? Math.floor(percentage * 100) + '% ' : '') + (part === Node3D.READING_MODEL ? 'Carregando modelos 3D' : 'Abrindo a casa');
   };
@@ -358,30 +363,38 @@ body.m-existente [data-modelo=existente], body.m-proposta [data-modelo=proposta]
     var c3 = preview && preview.getComponent3D && preview.getComponent3D();
     if (c3 && c3.canvas3D && c3.canvas3D.fovPedido) c3.canvas3D.setFieldOfView(c3.canvas3D.fovPedido);
   });
-  // Vista aérea: o visualizador limita a aproximação pelo tamanho de tudo o que está no modelo, inclusive a praça e as ruas.
-  // Girando em volta só da casa (paredes selecionadas), dá para chegar bem mais perto com a roda do mouse ou com a pinça.
-  function vistaAereaNaCasa() {
+  // Vista aérea: o visualizador centraliza e limita a aproximação pelo tamanho de tudo o que está no modelo, inclusive a
+  // praça e as ruas do entorno (o centro caía na frente da casa e a pinça não aproximava). Aqui os limites passam a ser
+  // só os do lote (10 × 18 m, até a cobertura): a vista gira em volta do meio da casa e a pinça chega a uns 12 m dela.
+  var CASA = [0, 0, 1000, 1800, 900];
+  var limitesOriginal = HomeController3D.TopCameraState.prototype.updateAerialViewBoundsFromHomeBounds;
+  HomeController3D.TopCameraState.prototype.updateAerialViewBoundsFromHomeBounds = function (v) {
+    limitesOriginal.call(this, v);
+    var lo = this.aerialViewBoundsLowerPoint, up = this.aerialViewBoundsUpperPoint;
+    if (lo && up) { lo[0] = CASA[0]; lo[1] = CASA[1]; lo[2] = Math.max(lo[2], 0); up[0] = CASA[2]; up[1] = CASA[3]; up[2] = Math.min(up[2], CASA[4]); }
+  };
+  var celular = function () { return tela.clientWidth < tela.clientHeight; };
+  // Ao abrir: vista aérea a cerca de 26 m do meio da casa (28 m no celular em pé, olhando de frente e mais de cima,
+  // para o comprimento da casa caber na altura da tela). No celular, o painel se recolhe para não cobrir a casa.
+  var inicioFeito = false;
+  function ajustarInicio() {
+    if (inicioFeito) return;
     try {
-      var home = preview.getHome(), prefs = preview.getUserPreferences();
-      prefs.setAerialViewCenteredOnSelectionEnabled(true);
-      home.setSelectedItems(home.getWalls().slice());
-      setTimeout(aproximar, 400);
+      var home = preview.getHome(), cam = home.getTopCamera(), c = preview.getController();
+      if (!cam || home.getCamera() !== cam) return;
+      inicioFeito = true;
+      if (celular()) { c.rotateCameraYaw(Math.PI - cam.getYaw()); c.rotateCameraPitch(0.85 - cam.getPitch()); }
+      var d = Math.hypot(cam.getX() - 500, cam.getY() - 900, cam.getZ() - 450);
+      c.moveCamera((d - (celular() ? 2800 : 2600)) / 5);
+      if (tela.clientWidth <= 640) recolher(true);
     } catch (e) { console.log(e); }
   }
-  function aproximar() {
-    try {
-      var home = preview.getHome();
-      // abre perto da casa: cerca de 28 m na tela deitada e 36 m no celular em pé (antes ficava a uns 57 m)
-      var ws = home.getWalls(), cx = 0, cy = 0;
-      for (var i = 0; i < ws.length; i++) { cx += (ws[i].getXStart() + ws[i].getXEnd()) / 2; cy += (ws[i].getYStart() + ws[i].getYEnd()) / 2; }
-      cx /= ws.length; cy /= ws.length;
-      var cam = home.getTopCamera(), d = Math.hypot(cam.getX() - cx, cam.getY() - cy, cam.getZ() - 300);
-      var alvo = tela.clientWidth < tela.clientHeight ? 3600 : 2800;
-      if (home.getCamera() === cam && d > alvo) preview.getController().moveCamera((d - alvo) / 5);
-      // celular em pé: olhar de frente, pela rua, para o comprimento da casa caber na altura da tela
-      if (home.getCamera() === cam && tela.clientWidth < tela.clientHeight) { preview.getController().rotateCameraYaw(Math.PI - cam.getYaw()); preview.getController().rotateCameraPitch(0.85 - cam.getPitch()); }
-    } catch (e) { console.log(e); }
-  }
+  var espera = setInterval(function () {
+    if (preview && preview.getHome && preview.getHome() && getComputedStyle(document.getElementById('progress')).display === 'none') { clearInterval(espera); setTimeout(ajustarInicio, 300); }
+  }, 300);
+  var topo = document.getElementById('top'), btnMenu = document.getElementById('btnMenu');
+  function recolher(r) { topo.classList.toggle('recolhido', r); btnMenu.textContent = r ? 'Menu ▾' : 'Fechar ▴'; btnMenu.setAttribute('aria-expanded', String(!r)); }
+  btnMenu.onclick = function () { recolher(!topo.classList.contains('recolhido')); };
   var levelNames = prop ?['Casa completa', 'Pavimento superior', 'Térreo — sem cobertura'] : ['Casa completa', 'Térreo — sem cobertura'];
   document.getElementById('levelsAndCameras').addEventListener('change', function (e) {
     var t = e.target.options[e.target.selectedIndex].text;
